@@ -25,4 +25,4 @@
   Paste the following commands into your terminal window on VS Code (at bottom of screen)
   1. cd my-app
   2. npm start
-  Visit http://localhost:3000/ to view the calculator. Type '^C' to quit the project
+  3. Visit http://localhost:3000/ to view the calculator. Type '^C' to quit the project
