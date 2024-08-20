@@ -3,7 +3,7 @@
 ## Step 1: VS Code
   Install [Visual Studio Code]([url](https://code.visualstudio.com/)) this is the IDE we will be using to develop and run the project
 ## Step 2: Node.js
-  Install [Node.js]([url](https://nodejs.org/en/download/package-manager)). Node.js is widely used in web development for building backend services, APIs, and even full-stack applications when combined with frontend frameworks like React or Angular. In this case we will use Node.js to make our react project. Type the following in a terminal window.
+  Install [Node.js](https://nodejs.org/en/download/package-manager). Node.js is widely used in web development for building backend services, APIs, and even full-stack applications when combined with frontend frameworks like React or Angular. In this case we will use Node.js to make our react project. Type the following in a terminal window.
   ### For Mac:
     # installs nvm (Node Version Manager)
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
