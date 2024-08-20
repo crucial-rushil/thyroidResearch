@@ -20,9 +20,17 @@
 ## Step 3: Clone github Repository:
   1. Open a new window in VS Code and under the Start menu click "clone git repository"
   2. Paste https://github.com/crucial-rushil/thyroidResearch.git at the top of the screen
-
+  3. Select where you want to locally save your project
+     
 ## Step 4: Running the Project: 
   Paste the following commands into your terminal window on VS Code (at bottom of screen)
   1. cd my-app
   2. npm start
   3. Visit http://localhost:3000/ to view the calculator. Type '^C' to quit the project
+
+## Saving Changes to the Remote Repository
+  The following commands will save your changes onto the repository for everyone to see.
+  1. git add .
+  2. git commit -m "Insert Commit Message"
+  3. git push
+
