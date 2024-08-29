@@ -136,11 +136,11 @@ const SimpleForm = () => {
   
   return (
     <div style={{ maxWidth: '400px', margin: '20px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
-      <h2>Dosage Calculator</h2>
+      <h2>Paitent Lab Hormone Values</h2>
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '15px' }}>
           <div style={{ marginBottom: '15px' }}>
-            <h4 style={{ display: 'block', marginBottom: '10px' }}>Thyroid Hormone</h4>
+            <h4 style={{ display: 'block', marginBottom: '10px' }}>Enter Measured Hormone Values</h4>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ marginBottom: '10px' }}>
                 <label>
@@ -258,14 +258,14 @@ const SimpleForm = () => {
           />
         </div>
         <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Biological Sex</label>
+          <label style={{ display: 'block', marginBottom: '5px' }}>Biological Gender</label>
           <select
             value={gender}
             onChange={(e) => setGender(e.target.value)}
             style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
             required
           >
-            <option value="" disabled>Select Biological Sex</option>
+            <option value="" disabled>Select Biological Gender</option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
           </select>

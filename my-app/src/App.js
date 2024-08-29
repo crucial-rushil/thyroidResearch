@@ -9,7 +9,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1 style={{ textAlign: 'center' }}>Thyroid Dosage Calculator</h1>
+        <h1 style={{ textAlign: 'center' }}>LT3 + LT4 Dosage Calculator</h1>
         <SimpleForm />
       </header>
       
