@@ -32,9 +32,10 @@ const SimpleForm = () => {
     // setValue('')
     // setBMI('')
 
-    // const response = calculateDosage(hormone, value, bmi, gender)
-    // console.log(response)
-    // setRTF(response)
+    let response = calculateDosage(checkTT4, valueTT4, bmi, gender)
+    console.log(response)
+    response = (response * 100).toFixed(3) + "%"
+    setRTF(response)
   };
 
   const handleCheckboxChange = (name) => {
@@ -142,8 +143,8 @@ const SimpleForm = () => {
           <div style={{ marginBottom: '15px' }}>
             <h4 style={{ display: 'block', marginBottom: '10px' }}>Enter Measured Hormone Values</h4>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ marginBottom: '10px' }}>
-                <label>
+              <div style={{ marginBottom: '10px'}}>
+                <label style={{display:'flex'}}>
                   <input
                     type="checkbox"
                     value="TSH"
@@ -160,10 +161,24 @@ const SimpleForm = () => {
                     style={{ width: '70%', padding: '2px', boxSizing: 'border-box', marginLeft: '20px' }}
                     disabled={!checkTSH}
                   />
+
+                  <select
+                    // value={valueTSH}
+                    style={{ width: '30%', padding: '2px', boxSizing: 'border-box', marginLeft: '10px' }}
+                    // onChange={(e) => handleInputChange('TSH', e.target.value)}
+                    disabled={!checkTSH}
+                    required
+                  >
+                    <option value="" disabled>Units</option>
+                    <option value="TSH">Unit 1</option>
+                    <option value="TT3">Unit 2</option>
+                    <option value="FT3">Unit 3</option>
+                    <option value="FT4">Unit 4</option>
+                   </select>
                 </label>
               </div>
               <div style={{ marginBottom: '10px' }}>
-                <label>
+                <label style={{display:'flex'}}>
                   <input
                     type="checkbox"
                     value="TT3"
@@ -180,10 +195,23 @@ const SimpleForm = () => {
                     style={{ width: '70%', padding: '2px', boxSizing: 'border-box', marginLeft: '22px' }}
                     disabled={!checkTT3}
                   />
+                  <select
+                    // value={valueTSH}
+                    style={{ width: '30%', padding: '2px', boxSizing: 'border-box', marginLeft: '10px' }}
+                    // onChange={(e) => handleInputChange('TSH', e.target.value)}
+                    disabled={!checkTT3}
+                    required
+                  >
+                    <option value="" disabled>Units</option>
+                    <option value="TSH">Unit 1</option>
+                    <option value="TT3">Unit 2</option>
+                    <option value="FT3">Unit 3</option>
+                    <option value="FT4">Unit 4</option>
+                   </select>
                 </label>
               </div>
               <div style={{ marginBottom: '10px' }}>
-                <label>
+                <label style={{display:'flex'}}>
                   <input
                     type="checkbox"
                     value="TT4"
@@ -200,10 +228,23 @@ const SimpleForm = () => {
                     style={{ width: '70%', padding: '2px', boxSizing: 'border-box', marginLeft: '22px' }}
                     disabled={!checkTT4}
                   />
+                  <select
+                    // value={valueTSH}
+                    style={{ width: '30%', padding: '2px', boxSizing: 'border-box', marginLeft: '10px' }}
+                    // onChange={(e) => handleInputChange('TSH', e.target.value)}
+                    disabled={!checkTT4}
+                    required
+                  >
+                    <option value="" disabled>Units</option>
+                    <option value="TSH">Unit 1</option>
+                    <option value="TT3">Unit 2</option>
+                    <option value="FT3">Unit 3</option>
+                    <option value="FT4">Unit 4</option>
+                   </select>
                 </label>
               </div>
               <div style={{ marginBottom: '10px' }}>
-                <label>
+                <label style={{display:'flex'}}>
                   <input
                     type="checkbox"
                     value="FT3"
@@ -220,10 +261,23 @@ const SimpleForm = () => {
                     style={{ width: '70%', padding: '2px', boxSizing: 'border-box', marginLeft: '22px' }}
                     disabled={!checkFT3}
                     />
+                  <select
+                    // value={valueTSH}
+                    style={{ width: '30%', padding: '2px', boxSizing: 'border-box', marginLeft: '10px' }}
+                    // onChange={(e) => handleInputChange('TSH', e.target.value)}
+                    disabled={!checkFT3}
+                    required
+                  >
+                    <option value="" disabled>Units</option>
+                    <option value="TSH">Unit 1</option>
+                    <option value="TT3">Unit 2</option>
+                    <option value="FT3">Unit 3</option>
+                    <option value="FT4">Unit 4</option>
+                   </select>
                 </label>
               </div>
               <div style={{ marginBottom: '10px' }}>
-                <label>
+                <label style={{display:'flex'}}>
                   <input
                     type="checkbox"
                     value="FT4"
@@ -240,6 +294,19 @@ const SimpleForm = () => {
                     style={{ width: '70%', padding: '2px', boxSizing: 'border-box', marginLeft: '22px' }}
                     disabled={!checkFT4}
                     />
+                  <select
+                    // value={valueTSH}
+                    style={{ width: '30%', padding: '2px', boxSizing: 'border-box', marginLeft: '10px' }}
+                    // onChange={(e) => handleInputChange('TSH', e.target.value)}
+                    required
+                    disabled={!checkFT4}
+                  >
+                    <option value="" disabled>Units</option>
+                    <option value="TSH">Unit 1</option>
+                    <option value="TT3">Unit 2</option>
+                    <option value="FT3">Unit 3</option>
+                    <option value="FT4">Unit 4</option>
+                   </select>
                 </label>
               </div>
             </div>
@@ -271,7 +338,7 @@ const SimpleForm = () => {
           </select>
         </div>
         <button type="submit" style={{ width: '100%', padding: '10px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-          Submit
+          Enter
         </button>
       </form>
       <h3>Calculated RTF Value: {RTF}</h3>
