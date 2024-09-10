@@ -26,13 +26,31 @@ const SimpleForm = () => {
   console.log(valTSH)
   const handleSubmit = (event) => {
     event.preventDefault();
-    console.log({ valueTSH, checkTSH, valueTT3, checkTT3, bmi, gender,checkTT4,valueTT4, checkFT3, valueFT3, checkFT4, valueFT4});
-    // setHormone('')
-    // setGender('')
-    // setValue('')
-    // setBMI('')
+    // console.log({ valueTSH, checkTSH, valueTT3, checkTT3, bmi, gender,checkTT4,valueTT4, checkFT3, valueFT3, checkFT4, valueFT4});
+    
+    let hormones = new Map();
+    if (checkTSH)
+      {
+        hormones.set('TSH',valueTSH)
+      }
+    if (checkTT3)
+      {
+        hormones.set('TT3',valueTT3)
+      }
+    if (checkTT4)
+      {
+        hormones.set('TT4',valueTT4)
+      }
+    if (checkFT3)
+      {
+        hormones.set('FT3',valueFT3)
+      }
+    if (checkFT4)
+      {
+        hormones.set('FT4',valueFT4)
+      }
 
-    let response = calculateDosage(checkTT4, valueTT4, bmi, gender)
+    let response = calculateDosage(hormones, bmi, gender)
     console.log(response)
     response = (response * 100).toFixed(3) + "%"
     setRTF(response)
