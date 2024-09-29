@@ -21,6 +21,12 @@ const SimpleForm = () => {
 
   const [checkFT4,setFT4] = useState(false);
   const [valueFT4, valFT4] = useState('');
+
+  const [weight, setWeight] = useState('');
+  const [weightUnit, setWeightUnit] = useState('lbs');
+  
+  const [height, setHeight] = useState('');
+  const [heightUnit, setHeightUnit] = useState('inches');
   
 
   console.log(valTSH)
@@ -195,7 +201,7 @@ const SimpleForm = () => {
                    </select>
                 </label>
               </div>
-              <div style={{ marginBottom: '10px' }}>
+              {/* <div style={{ marginBottom: '10px' }}>
                 <label style={{display:'flex'}}>
                   <input
                     type="checkbox"
@@ -227,8 +233,8 @@ const SimpleForm = () => {
                     <option value="FT4">Unit 4</option>
                    </select>
                 </label>
-              </div>
-              <div style={{ marginBottom: '10px' }}>
+              </div> */}
+              {/* <div style={{ marginBottom: '10px' }}>
                 <label style={{display:'flex'}}>
                   <input
                     type="checkbox"
@@ -260,7 +266,7 @@ const SimpleForm = () => {
                     <option value="FT4">Unit 4</option>
                    </select>
                 </label>
-              </div>
+              </div> */}
               <div style={{ marginBottom: '10px' }}>
                 <label style={{display:'flex'}}>
                   <input
@@ -341,6 +347,55 @@ const SimpleForm = () => {
             style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
             required
           />
+        </div>
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'block', marginBottom: '5px' }}>Weight</label>
+            <label style={{display:'flex'}}>
+              <input
+                type="text"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+                placeholder="Enter Weight in lbs"
+                style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+                required
+              />
+              <select
+                // value={valueTSH}
+                style={{ width: '30%', padding: '2px', boxSizing: 'border-box', marginLeft: '10px' }}
+                // onChange={(e) => handleInputChange('TSH', e.target.value)}
+                value={weightUnit}
+                onChange={(e) => setWeightUnit(e.target.value)}
+                required
+              >
+                <option value="" disabled>Units</option>
+                <option value="lbs">lbs</option>
+                <option value="kg">kg</option>
+              </select>
+            </label>
+        </div>
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'block', marginBottom: '5px' }}>Height</label>
+          <label style={{display:'flex'}}>
+            <input
+              type="text"
+              value={height}
+              onChange={(e) => setHeight(e.target.value)}
+              placeholder="Enter Height in inches"
+              style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+              required
+            />
+            <select
+              // value={valueTSH}
+              style={{ width: '30%', padding: '2px', boxSizing: 'border-box', marginLeft: '10px' }}
+              value={heightUnit}
+              onChange={(e) => setHeightUnit(e.target.value)}
+              required
+            >
+              <option value="" disabled>Units</option>
+              <option value="inch">inches</option>
+              <option value="cm">cm</option>
+            </select>
+          </label>
         </div>
         <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'block', marginBottom: '5px' }}>Biological Gender</label>
