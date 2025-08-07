@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { calculateDosage } from './calculate';
+import { getRTFfromFT4 } from './calculate';
+import { useNavigate } from 'react-router-dom';
 
 const SimpleForm = () => {
   const [bmi, setBMI] = useState('');
+  const [calculatedBMI, setCalculatedBMI] = useState('');
   const [gender, setGender] = useState('');
   // const [value, setValue] = useState('');
   const [RTF, setRTF] = useState('');
 
   const [checkTSH,setTSH] = useState(false);
   const [valueTSH, valTSH] = useState('');
+  const [unitsTSH, setUnitsTSH] = useState("");
 
   const [checkTT3,setTT3] = useState(false);
   const [valueTT3, valtt3] = useState('');
@@ -27,12 +31,32 @@ const SimpleForm = () => {
   
   const [height, setHeight] = useState('');
   const [heightUnit, setHeightUnit] = useState('inches');
+
+  const navigate = useNavigate();
+
+
+useEffect(() => {
+  const w = parseFloat(weight);
+  const h = parseFloat(height);
+
+  if (!isNaN(w) && !isNaN(h) && h > 0) {
+    const weightInKg = w * 0.453592;
+    const heightInM = h * 0.0254;
+
+    const bmiValue = weightInKg / (heightInM * heightInM);
+    setCalculatedBMI(bmiValue.toFixed(2));
+    setBMI(bmiValue.toFixed(2));
+  } else {
+    setCalculatedBMI('');
+    setBMI('');
+  }
+}, [weight, height]);
   
 
   console.log(valTSH)
   const handleSubmit = (event) => {
     event.preventDefault();
-    // console.log({ valueTSH, checkTSH, valueTT3, checkTT3, bmi, gender,checkTT4,valueTT4, checkFT3, valueFT3, checkFT4, valueFT4});
+    console.log({ valueTSH, checkTSH, valueTT3, checkTT3, bmi, gender,checkTT4,valueTT4, checkFT3, valueFT3, checkFT4, valueFT4});
     
     let hormones = new Map();
     if (checkTSH)
@@ -56,10 +80,29 @@ const SimpleForm = () => {
         hormones.set('FT4',valueFT4)
       }
 
-    let response = calculateDosage(hormones, bmi, gender)
-    console.log(response)
-    response = (response * 100).toFixed(3) + "%"
-    setRTF(response)
+    hormones.set('weight', weight);
+    hormones.set('weightUnit', weightUnit);
+    hormones.set('height', height);
+    hormones.set('heightUnit', heightUnit);
+
+    calculateDosage(hormones, bmi, gender).then(response => {
+      const rtfFormatted = (response * 100).toFixed(0) + "%";  // ✅ declare it
+      console.log("Response:", response);
+      setRTF(rtfFormatted);
+      navigate('/result', { state: { rtf: rtfFormatted } });  // ✅ now it exists
+    });
+
+    // calculateDosage(hormones, bmi, gender).then(response => {
+    //   console.log("Response:", response);
+    //   setRTF((response * 100).toFixed(3) + "%");
+    //   navigate('/result', { state: { rtf: rtfFormatted } });
+    // });
+
+    // let response = calculateDosage(hormones, bmi, gender)
+    
+    // console.log("Response:",response)
+    // response = (response * 100).toFixed(3) + "%"
+    // setRTF(response)
   };
 
   const handleCheckboxChange = (name) => {
@@ -160,8 +203,12 @@ const SimpleForm = () => {
 
   
   return (
+  <div>
+    <h1 style={{ textAlign: 'center', fontSize: '1.8em' }}>
+          <span style={{ color: 'red', fontStyle: 'italic' }}>LT43DOSING:</span> LT4 + LT3 Dosing
+        </h1>
     <div style={{ maxWidth: '400px', margin: '20px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
-      <h2>Paitent Lab Hormone Values</h2>
+      <h2 style={{ textAlign: 'center' }}>Patient Lab Values</h2>
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '15px' }}>
           <div style={{ marginBottom: '15px' }}>
@@ -177,6 +224,18 @@ const SimpleForm = () => {
                     style={{ marginRight: '10px' }}
                   />
                   TSH
+                  <select
+                    // value={valueTSH}
+                    style={{ width: '30%', padding: '2px', boxSizing: 'border-box', marginLeft: '10px' }}
+                    // onChange={(e) => handleInputChange('TSH', e.target.value)}
+                    disabled={!checkTSH}
+                    required
+                  >
+                    <option value="" disabled>Units</option>
+                    <option value="TSH">mU/L</option>
+                    <option>µU/mL</option>
+                   </select>
+                  
                   <input
                     type="text"
                     value={valueTSH}
@@ -186,120 +245,10 @@ const SimpleForm = () => {
                     disabled={!checkTSH}
                   />
 
-                  <select
-                    // value={valueTSH}
-                    style={{ width: '30%', padding: '2px', boxSizing: 'border-box', marginLeft: '10px' }}
-                    // onChange={(e) => handleInputChange('TSH', e.target.value)}
-                    disabled={!checkTSH}
-                    required
-                  >
-                    <option value="" disabled>Units</option>
-                    <option value="TSH">Unit 1</option>
-                    <option value="TT3">Unit 2</option>
-                    <option value="FT3">Unit 3</option>
-                    <option value="FT4">Unit 4</option>
-                   </select>
+                  
                 </label>
               </div>
-              {/* <div style={{ marginBottom: '10px' }}>
-                <label style={{display:'flex'}}>
-                  <input
-                    type="checkbox"
-                    value="TT3"
-                    onChange={() => handleCheckboxChange('TT3')}
-                    checked={checkTT3}
-                    style={{ marginRight: '10px' }}
-                  />
-                  TT3
-                  <input
-                    type="text"
-                    value={valueTT3}
-                    onChange={(e) => handleInputChange('TT3', e.target.value)}
-                    placeholder="Enter TT3 "
-                    style={{ width: '70%', padding: '2px', boxSizing: 'border-box', marginLeft: '22px' }}
-                    disabled={!checkTT3}
-                  />
-                  <select
-                    // value={valueTSH}
-                    style={{ width: '30%', padding: '2px', boxSizing: 'border-box', marginLeft: '10px' }}
-                    // onChange={(e) => handleInputChange('TSH', e.target.value)}
-                    disabled={!checkTT3}
-                    required
-                  >
-                    <option value="" disabled>Units</option>
-                    <option value="TSH">Unit 1</option>
-                    <option value="TT3">Unit 2</option>
-                    <option value="FT3">Unit 3</option>
-                    <option value="FT4">Unit 4</option>
-                   </select>
-                </label>
-              </div> */}
-              {/* <div style={{ marginBottom: '10px' }}>
-                <label style={{display:'flex'}}>
-                  <input
-                    type="checkbox"
-                    value="TT4"
-                    checked={checkTT4}
-                    onChange={() => handleCheckboxChange('TT4')}
-                    style={{ marginRight: '10px' }}
-                  />
-                  TT4
-                  <input
-                    type="text"
-                    value={valueTT4}
-                    onChange={(e) => handleInputChange('TT4', e.target.value)}
-                    placeholder="Enter TT4 "
-                    style={{ width: '70%', padding: '2px', boxSizing: 'border-box', marginLeft: '22px' }}
-                    disabled={!checkTT4}
-                  />
-                  <select
-                    // value={valueTSH}
-                    style={{ width: '30%', padding: '2px', boxSizing: 'border-box', marginLeft: '10px' }}
-                    // onChange={(e) => handleInputChange('TSH', e.target.value)}
-                    disabled={!checkTT4}
-                    required
-                  >
-                    <option value="" disabled>Units</option>
-                    <option value="TSH">Unit 1</option>
-                    <option value="TT3">Unit 2</option>
-                    <option value="FT3">Unit 3</option>
-                    <option value="FT4">Unit 4</option>
-                   </select>
-                </label>
-              </div> */}
-              <div style={{ marginBottom: '10px' }}>
-                <label style={{display:'flex'}}>
-                  <input
-                    type="checkbox"
-                    value="FT3"
-                    checked={checkFT3}
-                    onChange={() => handleCheckboxChange('FT3')}
-                    style={{ marginRight: '10px' }}
-                  />
-                  FT3
-                  <input
-                    type="text"
-                    value={valueFT3}
-                    onChange={(e) => handleInputChange('FT3', e.target.value)}
-                    placeholder="Enter FT3"
-                    style={{ width: '70%', padding: '2px', boxSizing: 'border-box', marginLeft: '22px' }}
-                    disabled={!checkFT3}
-                    />
-                  <select
-                    // value={valueTSH}
-                    style={{ width: '30%', padding: '2px', boxSizing: 'border-box', marginLeft: '10px' }}
-                    // onChange={(e) => handleInputChange('TSH', e.target.value)}
-                    disabled={!checkFT3}
-                    required
-                  >
-                    <option value="" disabled>Units</option>
-                    <option value="TSH">Unit 1</option>
-                    <option value="TT3">Unit 2</option>
-                    <option value="FT3">Unit 3</option>
-                    <option value="FT4">Unit 4</option>
-                   </select>
-                </label>
-              </div>
+
               <div style={{ marginBottom: '10px' }}>
                 <label style={{display:'flex'}}>
                   <input
@@ -310,14 +259,6 @@ const SimpleForm = () => {
                     style={{ marginRight: '10px' }}
                   />
                   FT4
-                  <input
-                    type="text"
-                    value={valueFT4}
-                    onChange={(e) => handleInputChange('FT4', e.target.value)}
-                    placeholder="Enter FT4"
-                    style={{ width: '70%', padding: '2px', boxSizing: 'border-box', marginLeft: '22px' }}
-                    disabled={!checkFT4}
-                    />
                   <select
                     // value={valueTSH}
                     style={{ width: '30%', padding: '2px', boxSizing: 'border-box', marginLeft: '10px' }}
@@ -326,43 +267,114 @@ const SimpleForm = () => {
                     disabled={!checkFT4}
                   >
                     <option value="" disabled>Units</option>
-                    <option value="TSH">Unit 1</option>
-                    <option value="TT3">Unit 2</option>
-                    <option value="FT3">Unit 3</option>
-                    <option value="FT4">Unit 4</option>
+                    <option >ng/L</option>
+                    <option>pg/mL</option>                  
+                    <option >ng/dL</option>
+                    <option >pmol/L</option>
+                    <option >nmol/L</option>
                    </select>
+                  <input
+                    type="text"
+                    value={valueFT4}
+                    onChange={(e) => handleInputChange('FT4', e.target.value)}
+                    placeholder="Enter FT4"
+                    style={{ width: '70%', padding: '2px', boxSizing: 'border-box', marginLeft: '22px' }}
+                    disabled={!checkFT4}
+                    />
+                  
                 </label>
               </div>
+              
+              
+              <div style={{ marginBottom: '10px' }}>
+                <label style={{display:'flex'}}>
+                  <input
+                    type="checkbox"
+                    value="FT3"
+                    checked={checkFT3}
+                    onChange={() => handleCheckboxChange('FT3')}
+                    style={{ marginRight: '10px' }}
+                  />
+                  FT3
+                  <select
+                    // value={valueTSH}
+                    style={{ width: '30%', padding: '2px', boxSizing: 'border-box', marginLeft: '10px' }}
+                    // onChange={(e) => handleInputChange('TSH', e.target.value)}
+                    disabled={!checkFT3}
+                    required
+                  >
+                    <option value="" disabled>Units</option>
+                    <option value="TT3">ng/L</option>
+                    <option value="TSH">pg/mL</option>
+                    <option value="FT3">pg/dL</option>
+                    <option value="FT4">pmol/L</option>
+                   </select>
+                  <input
+                    type="text"
+                    value={valueFT3}
+                    onChange={(e) => handleInputChange('FT3', e.target.value)}
+                    placeholder="Enter FT3"
+                    style={{ width: '70%', padding: '2px', boxSizing: 'border-box', marginLeft: '22px' }}
+                    disabled={!checkFT3}
+                    />
+                  
+                </label>
+              </div>
+              <div style={{ marginBottom: '10px' }}>
+                <label style={{display:'flex'}}>
+                  <input
+                    type="checkbox"
+                    value="TT3"
+                    onChange={() => handleCheckboxChange('TT3')}
+                    checked={checkTT3}
+                    style={{ marginRight: '10px' }}
+                  />
+                  TT3
+                  <select
+                    // value={valueTSH}
+                    style={{ width: '30%', padding: '2px', boxSizing: 'border-box', marginLeft: '10px' }}
+                    // onChange={(e) => handleInputChange('TSH', e.target.value)}
+                    disabled={!checkTT3}
+                    required
+                  >
+                    <option value="" disabled>Units</option>
+                    <option value="TT3">μg/L</option>
+                    <option value="TSH">ng/L</option>
+                    <option value="TSH">ng/dL</option>
+                    <option value="FT3">nmol/L</option>
+                    <option value="FT3">μmol/L</option>
+                    
+                   </select>
+                  <input
+                    type="text"
+                    value={valueTT3}
+                    onChange={(e) => handleInputChange('TT3', e.target.value)}
+                    placeholder="Enter TT3 "
+                    style={{ width: '70%', padding: '2px', boxSizing: 'border-box', marginLeft: '22px' }}
+                    disabled={!checkTT3}
+                  />                 
+                </label>
+              </div>
+              
             </div>
           </div>
         </div>
         
+        
         <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>BMI</label>
-          <input
-            type="text"
-            value={bmi}
-            onChange={(e) => setBMI(e.target.value)}
-            placeholder="Enter BMI"
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-            required
-          />
-        </div>
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Weight</label>
+          <label style={{ display: 'block', marginBottom: '5px' , fontWeight: "bold"}}>Weight (W)</label>
             <label style={{display:'flex'}}>
               <input
                 type="text"
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
-                placeholder="Enter Weight in lbs"
+                placeholder="Enter Weight"
                 style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
                 required
               />
               <select
                 // value={valueTSH}
                 style={{ width: '30%', padding: '2px', boxSizing: 'border-box', marginLeft: '10px' }}
-                // onChange={(e) => handleInputChange('TSH', e.target.value)}
                 value={weightUnit}
                 onChange={(e) => setWeightUnit(e.target.value)}
                 required
@@ -374,13 +386,13 @@ const SimpleForm = () => {
             </label>
         </div>
         <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Height</label>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight:"bold" }}>Height (H)</label>
           <label style={{display:'flex'}}>
             <input
               type="text"
               value={height}
               onChange={(e) => setHeight(e.target.value)}
-              placeholder="Enter Height in inches"
+              placeholder="Enter Height"
               style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
               required
             />
@@ -397,8 +409,14 @@ const SimpleForm = () => {
             </select>
           </label>
         </div>
+        <div style={{
+           paddingBottom: '12px'
+        }}>
+        <strong>Calculated BMI = W / H<sup>2</sup> = {calculatedBMI ? calculatedBMI : '...'}</strong>
+        {/* <strong>Calculated BMI = W / H<sup>2</sup> = </strong> */}
+        </div>
         <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Biological Gender</label>
+          <label style={{ display: 'block', marginBottom: '5px' , fontWeight:"bold"}}>Biological Gender</label>
           <select
             value={gender}
             onChange={(e) => setGender(e.target.value)}
@@ -414,9 +432,11 @@ const SimpleForm = () => {
           Enter
         </button>
       </form>
-      <h3>Calculated RTF Value: {RTF}</h3>
+      {/* <h3>Calculated RTF Value: {RTF}</h3> */}
+    </div>
     </div>
   );
+  
 };
 
 export default SimpleForm;

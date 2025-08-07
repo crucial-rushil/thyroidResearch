@@ -1,113 +1,150 @@
+import React, { useState, useEffect } from 'react';
+import Papa from 'papaparse';
 
-export const calculateDosage = (hormones, bmi, gender) => {
+function bilinearInterpolation(x, y, x1, x2, y1, y2, Q11, Q21, Q12, Q22) {
+  const denom = (x2 - x1) * (y2 - y1);
+  return (
+    Q11 * (x2 - x) * (y2 - y) / denom +
+    Q21 * (x - x1) * (y2 - y) / denom +
+    Q12 * (x2 - x) * (y - y1) / denom +
+    Q22 * (x - x1) * (y - y1) / denom
+  );
+}
+
+function getInterpolatedParameter(data, weight, height, param) {
+  console.log(`Interpolating for weight: ${weight}, height: ${height}, parameter: ${param}`);
+  const weights = [...new Set(data.map(row => parseInt(row['Weight'])))].sort((a, b) => a - b);
+  const heights = [...new Set(data.map(row => parseInt(row['Height'])))].sort((a, b) => a - b);
+  
+  const x1 = Math.max(...weights.filter(w => w <= weight));
+  const x2 = Math.min(...weights.filter(w => w >= weight));
+  const y1 = Math.max(...heights.filter(h => h <= height));
+  const y2 = Math.min(...heights.filter(h => h >= height));
+
+  const findValue = (x, y) => {
+  const row = data.find(r =>
+    Math.round(Number(r['Weight'])) === Math.round(x) &&
+    Math.round(Number(r['Height'])) === Math.round(y)
+  );
+  return row ? parseFloat(row[param]) : null;
+  };
+
+  const Q11 = findValue(x1, y1);
+  const Q21 = findValue(x2, y1);
+  const Q12 = findValue(x1, y2);
+  const Q22 = findValue(x2, y2);
+
+  if ([Q11, Q21, Q12, Q22].some(v => v === null)) {
+    console.warn('Interpolation failed: missing Q values');
+    return null;
+  }
+
+  return bilinearInterpolation(weight, height, x1, x2, y1, y2, Q11, Q21, Q12, Q22);
+}
+
+function calculateRTF(A, C, B, M, FT4) {
+  console.log(`Calculating RTF with A: ${A}, C: ${C}, B: ${B}, M: ${M}, FT4: ${FT4}`);
+  return A + (C - A) * Math.exp(-Math.exp(-B * (FT4 - M)));
+}
+
+function calculateRtfTsh(A, C, B, D, TSH) {
+  return A * Math.pow(TSH, -B) + C * Math.pow(TSH, -D); 
+}
+
+export async function getRTFfromFT4(weight, height, FT4, path) {
+  const response = await fetch(path); 
+  const text = await response.text();
+  const parsed = Papa.parse(text, { header: true });
+  const data = parsed.data;
+  console.log("Raw parsed data:", parsed.data.slice(0, 10));
+  const A = getInterpolatedParameter(data, weight, height, 'lower_asymptote');
+  console.log("Interpolated A:", A);
+  const C = getInterpolatedParameter(data, weight, height, 'upper_asymptote');
+  const B = getInterpolatedParameter(data, weight, height, 'growth_rate');
+  const M = getInterpolatedParameter(data, weight, height, 'inflection_point');
+
+  if ([A, B, C, M].some(v => v === null)) return null;
+
+  return calculateRTF(A, C, B, M, FT4);
+}
+
+export async function getRTFfromTSH(weight, height, TSH, path) {
+  const response = await fetch(path); 
+  const text = await response.text();
+  const parsed = Papa.parse(text, { header: true });
+  const data = parsed.data;
+  console.log("Raw parsed data:", parsed.data.slice(0, 10));
+  const A = getInterpolatedParameter(data, weight, height, 'a');
+  const C = getInterpolatedParameter(data, weight, height, 'c');
+  const B = getInterpolatedParameter(data, weight, height, 'b');
+  const D = getInterpolatedParameter(data, weight, height, 'd');
+
+  if ([A, B, C, D].some(v => v === null)) return null;
+
+  return calculateRtfTsh(A, C, B, D, TSH);
+}
+
+
+
+//MODIFY OLD CALCULATE DOSAGE FUNCTION
+export const calculateDosage = async (hormones, bmi, gender) => {
     
     let dosageTT4 = null;
     let dosageFT3 = null
     let dosageFT4 = null;
+    let dosageTT3 = null;
+    let dosageTSH = null;
     
-    if (hormones.has('TT4') && gender === 'Male' && bmi === "17") {
-        const constant1 = -0.000233; 
-        const constant2 = 1.583;
-        const exponent = -0.05264 * (hormones.get('TT4') - 57.15);
-        dosageTT4 = constant1 + (constant2 * Math.exp(-Math.exp(exponent)));
-    } 
-
-    else if (hormones.has('TT4') && gender === 'Male' && bmi === "23") {
-        const constant1 = -0.002095;
-        const constant2 = 1.676;
-        const exponent = -0.04886 * (hormones.get('TT4') - 59.95);
-        dosageTT4 = constant1 + (constant2 * Math.exp(-Math.exp(exponent)));
+    //NEW LOGIC FOR TT3
+    if (hormones.has('TT3')) {
+        console.log(hormones.get("TT3"))
+        console.log(hormones.get("weight"))
+        const tt3 = parseFloat(hormones.get("TT3"));
+        const weight = parseFloat(hormones.get("weight"));
+        const height = parseFloat(hormones.get("height"));
+        const path = '/data/maleTT3.csv';
+        const rtfTT3 = await getRTFfromFT4(weight, height, tt3,path);
+        console.log("HAS TT3")
+        console.log("RTF TT3:", rtfTT3);
+        dosageTT3 = rtfTT3
     }
 
-    else if (hormones.has('TT4') && gender === 'Male' && bmi === "35") {
-        const constant1 = -0.001712;
-        const constant2 = 1.668;
-        const exponent = -0.04831 * (hormones.get('TT4') - 61.84);
-        dosageTT4 = constant1 + (constant2 * Math.exp(-Math.exp(exponent)));
+    //NEW LOGIC FOR TSH
+    else if (hormones.has('TSH')) {
+        const TSH = parseFloat(hormones.get("TSH"));
+        const weight = parseFloat(hormones.get("weight"));
+        const height = parseFloat(hormones.get("height"));
+        const path = '/data/tshlog.csv';
+        const rtfTSH = await getRTFfromTSH(weight, height, TSH,path);
+        dosageTSH = rtfTSH
     }
 
-    else if (hormones.has('TT4') && gender === 'Female' && bmi === "17") {
-        const constant1 = -0.003621;
-        const constant2 = 1.789;
-        const exponent = -0.04747 * (hormones.get('TT4') - 57.96);
-        dosageTT4 = constant1 + (constant2 * Math.exp(-Math.exp(exponent)));
+    //NEW LOGIC FOR FT4
+    else if (hormones.has('FT4')) {
+        console.log(hormones.get("FT4"))
+        console.log(hormones.get("weight"))
+        const ft4 = parseFloat(hormones.get("FT4"));
+        const weight = parseFloat(hormones.get("weight"));
+        const height = parseFloat(hormones.get("height"));
+        const path = '/data/maleFT41.csv';
+        const rtfFT4 = await getRTFfromFT4(weight, height, ft4,path);
+        console.log("HAS FTR")
+        console.log("RTF FT4:", rtfFT4);
+        dosageFT4 = rtfFT4
     }
 
-    else if (hormones.has('TT4') && gender === 'Female' && bmi === "23") {
-        const constant1 = -0.003232;
-        const constant2 = 1.774;
-        const exponent = -0.04696 * (hormones.get('TT4') - 59.70);
-        dosageTT4 = constant1 + (constant2 * Math.exp(-Math.exp(exponent)));
-    }
-
-    else if (hormones.has('TT4') && gender === 'Female' && bmi === "35") {
-        const constant1 = -0.000277;
-        const constant2 = 1.759;
-        const exponent = -0.04635 * (hormones.get('TT4') - 61.92);
-        dosageTT4 = constant1 + (constant2 * Math.exp(-Math.exp(exponent)));
-    }
-
-    if (hormones.has('FT4') && gender === 'Male' && bmi === "17") {
-        const constant1 = -0.005008;
-        const constant2 = 1.559;
-        const exponent = -0.02929 * (hormones.get('FT4') - 8.839);
-        dosageFT4 = constant1 + (constant2 * Math.exp(-Math.exp(exponent)));
-    }
-
-    else if (hormones.has('FT4') && gender === 'Male' && bmi === "23") {
-        const constant1 = -0.004914;
-        const constant2 = 1.532;
-        const exponent = -0.02808 * (hormones.get('FT4') - 9.251);
-        dosageFT4 = constant1 + (constant2 * Math.exp(-Math.exp(exponent)));
-    }
-    
-    else if (hormones.has('FT4') && gender === 'Male' && bmi === "35") {
-        const constant1 = -0.004943;
-        const constant2 = 1.493;
-        const exponent = -0.02618 * (hormones.get('FT4') - 9.900);
-        dosageFT4 = constant1 + (constant2 * Math.exp(-Math.exp(exponent)));
-    }
-
-    else if (hormones.has('FT4') && gender === 'Female' && bmi === "17") {
-        const constant1 = -0.005006;
-        const constant2 = 1.606;
-        const exponent = -0.3116 * (hormones.get('FT4') - 8.314);
-        dosageFT4 = constant1 + (constant2 * Math.exp(-Math.exp(exponent)));
-    }
-
-    else if (hormones.has('FT4') && gender === 'Female' && bmi === "23") {
-        const constant1 = -0.004786;
-        const constant2 = 1.578;
-        const exponent = -0.3000 * (hormones.get('FT4') - 8.708);
-        dosageFT4 = constant1 + (constant2 * Math.exp(-Math.exp(exponent)));
-    }
-
-    else if (hormones.has('FT4') && gender === 'Female' && bmi === "35") {
-        const constant1 = -0.004633;
-        const constant2 = 1.537;
-        const exponent = -0.2823 * (hormones.get('FT4') - 9.309);
-        dosageFT4 = constant1 + (constant2 * Math.exp(-Math.exp(exponent)));
-    }
-
-    if (hormones.has('FT3') && gender === 'Male' && bmi === "17") {
-        const constant1 = -0.001617;
-        const constant2 = 1.746;
-        const exponent = -1.384 * (hormones.get('FT3') - 2.78);
-        dosageFT3 = constant1 + (constant2 * Math.exp(-Math.exp(exponent)));
-    }
-
-    else if (hormones.has('FT3') && gender === 'Male' && bmi === "23") {
-        const constant1 = -0.001364;
-        const constant2 = 1.707;
-        const exponent = -1.666 * (hormones.get('FT3') - 2.326);
-        dosageFT3 = constant1 + (constant2 * Math.exp(-Math.exp(exponent)));
-    }
-
-    else if (hormones.has('FT3') && gender === 'Male' && bmi === "35") {
-        const constant1 = -0.001575;
-        const constant2 = 1.674;
-        const exponent = -2.186 * (hormones.get('FT3') - 1.763);
-        dosageFT3 = constant1 + (constant2 * Math.exp(-Math.exp(exponent)));
+    //NEW LOGIC FOR FT3
+    else if (hormones.has('FT3')){
+        console.log(hormones.get("FT3"))
+        console.log(hormones.get("weight"))
+        const ft3 = parseFloat(hormones.get("FT3"));
+        const weight = parseFloat(hormones.get("weight"));
+        const height = parseFloat(hormones.get("height"));
+        const path = '/data/maleFT3.csv'; 
+        const rtfFT3 = await getRTFfromFT4(weight, height, ft3,path);
+        console.log("HAS FTR")
+        console.log("RTF FT3:", rtfFT3);
+        dosageFT3 = rtfFT3
     }
 
     else if (hormones.has('FT3') && gender === 'Female' && bmi === "17") {
@@ -138,7 +175,9 @@ export const calculateDosage = (hormones, bmi, gender) => {
         dosageFT3 = constant1 + (constant2 * Math.exp(-Math.exp(exponent)));
     }
 
-    let dosages = [dosageTT4,dosageFT3,dosageFT4]
+    //AVERAGE LOGIC
+    let dosages = [dosageTSH,dosageFT3,dosageFT4,dosageTT3]
+    console.log("Dosages:", dosages)
     let counter = 0
     let average = 0
     for (let i=0; i<dosages.length; i++)
@@ -149,7 +188,7 @@ export const calculateDosage = (hormones, bmi, gender) => {
                     counter += 1
                 }
         }
-
+    console.log("Calculation: ",average/counter)
     return (average / counter)
   };
   
